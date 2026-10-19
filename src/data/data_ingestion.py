@@ -20,19 +20,20 @@ def change_column_names(df: pd.DataFrame) -> pd.DataFrame | None:
         df.columns = df.columns.str.strip().str.lower()
 
         df.rename(columns={
-            "delivery_person_id": "rider_id",
-            "delivery_person_age": "rider_age",
-            "delivery_person_ratings": "rider_ratings",
-            "restaurant_latitude": "restaurant_latitude",
-            "restaurant_longitude": "restaurant_longitude",
-            "delivery_location_latitude": "delivery_latitude",
-            "delivery_location_longitude": "delivery_longitude",
-            "time_orderd": "order_time",
-            "time_ordered": "order_time",
-            "time_order_picked": "order_picked_time",
-            "weatherconditions": "weather",
-            "road_traffic_density": "traffic",
-            "time_taken(min)": "time_taken"
+        "delivery_person_id": "rider_id",
+        "delivery_person_age": "rider_age",
+        "delivery_person_ratings": "rider_ratings",
+        "restaurant_latitude": "restaurant_latitude",
+        "restaurant_longitude": "restaurant_longitude",
+        "delivery_location_latitude": "delivery_latitude",
+        "delivery_location_longitude": "delivery_longitude",
+        "time_orderd": "order_time",
+        "time_ordered": "order_time",
+        "time_order_picked": "order_picked_time",
+        "weatherconditions": "weather",
+        "road_traffic_density": "traffic",
+        "city": "city_type",
+        "time_taken(min)": "time_taken"
         }, inplace=True)
 
         return df

@@ -1,0 +1,18 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/data/data_ingestion.py
+    deps:
+    - path: data/external/swiggy.csv
+      hash: md5
+      md5: 55bd6cc42f2360b5de9569cf9cbd8342
+      size: 7726618
+    - path: src/data/data_ingestion.py
+      hash: md5
+      md5: 3893c70d74ce57ea21c969327eb943db
+      size: 10313
+    outs:
+    - path: data/raw/swiggy_cleaned.csv
+      hash: md5
+      md5: fd49f258d892f027a92f621806c6c360
+      size: 4592523
