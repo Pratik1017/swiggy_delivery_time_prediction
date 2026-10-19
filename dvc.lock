@@ -68,3 +68,18 @@ stages:
       hash: md5
       md5: cd90de73604d4a21907febb289ce1de0
       size: 5182
+  baseline_model:
+    cmd: python src/models/baseline_model.py
+    deps:
+    - path: data/processed/test_trans.csv
+      hash: md5
+      md5: 8ee84296f52998983eea91bc544531e8
+      size: 1433127
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 8c099a8cf14696848da8573f910f6ec4
+      size: 4284471
+    - path: src/models/baseline_model.py
+      hash: md5
+      md5: 455d405fc16cfef5278bc8d3324dbe9e
+      size: 3861

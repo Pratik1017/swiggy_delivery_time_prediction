@@ -27,3 +27,9 @@ stages:
     - data/processed/test_trans.csv
     - data/processed/train_trans.csv
     - models/preprocessor.pkl
+  baseline_model:
+    cmd: python src/models/baseline_model.py
+    deps:
+    - data/processed/test_trans.csv
+    - data/processed/train_trans.csv
+    - src/models/baseline_model.py
