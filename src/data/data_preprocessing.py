@@ -7,8 +7,8 @@ import os
 with open("params.yaml", "r") as f:
     params = yaml.safe_load(f)
 
-test_size = params["Data_Preparation"]["test_size"]
-random_state = params["Data_Preparation"]["random_state"]
+test_size = params["data_preprocessing"]["test_size"]
+random_state = params["data_preprocessing"]["random_state"]
 
 
 def load_data(data_path: str) -> pd.DataFrame | None:
@@ -72,11 +72,7 @@ def export_test_data(test_data: pd.DataFrame) -> pd.DataFrame | None:
 
 if __name__ == "__main__":
 
-    data_path = os.path.join(
-        "data", "cleaned", "swiggy_cleaned.csv"
-    )
-
-    df = load_data(data_path)
+    df = load_data("data/raw/swiggy_cleaned.csv")
 
     if df is not None:
         train_data, test_data = split_data(
