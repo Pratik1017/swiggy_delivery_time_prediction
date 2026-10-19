@@ -83,3 +83,23 @@ stages:
       hash: md5
       md5: 455d405fc16cfef5278bc8d3324dbe9e
       size: 3861
+  final_model:
+    cmd: python -m src.models.final_model
+    deps:
+    - path: data/processed/test_trans.csv
+      hash: md5
+      md5: 8ee84296f52998983eea91bc544531e8
+      size: 1433127
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 8c099a8cf14696848da8573f910f6ec4
+      size: 4284471
+    - path: src/models/final_model.py
+      hash: md5
+      md5: 3fa490c69ac59aba9ed9f94c716dbf15
+      size: 3456
+    outs:
+    - path: model.pkl
+      hash: md5
+      md5: c5f8cf3433342b20df9eb74d27595949
+      size: 1267627

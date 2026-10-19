@@ -33,3 +33,11 @@ stages:
     - data/processed/test_trans.csv
     - data/processed/train_trans.csv
     - src/models/baseline_model.py
+  final_model:
+    cmd: python -m src.models.final_model
+    deps:
+    - data/processed/test_trans.csv
+    - data/processed/train_trans.csv
+    - src/models/final_model.py
+    outs:
+    - model.pkl
