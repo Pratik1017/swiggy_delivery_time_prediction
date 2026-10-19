@@ -88,4 +88,3 @@ target/
 # Mypy cache
 .mypy_cache/
 /best_params.json
-/model.pkl

@@ -1,49 +1,70 @@
 
 import os
 import pickle
-import pandas as pd
-import numpy as np
+from pathlib import Path
+
 import mlflow
 import mlflow.sklearn
 import dagshub
+import numpy as np
+import pandas as pd
 
 from lightgbm import LGBMRegressor
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
-    r2_score
+    r2_score,
 )
 
 
-# Initialize DagsHub MLflow tracking
-dagshub.init(
-    repo_owner="Pratik1017",
-    repo_name="swiggy_delivery_time_prediction",
-    mlflow=True
-)
+# Project root directory
+ROOT_DIR = Path(__file__).resolve().parents[2]
+
+TRAIN_PATH = ROOT_DIR / "data" / "interim" / "train.csv"
+TEST_PATH = ROOT_DIR / "data" / "interim" / "test.csv"
+PREPROCESSOR_PATH = ROOT_DIR / "models" / "preprocessor.pkl"
+MODEL_PATH = ROOT_DIR / "model.pkl"
 
 
 def load_data():
-    train_path = os.path.join(
-        "data", "processed", "train_trans.csv"
-    )
-    test_path = os.path.join(
-        "data", "processed", "test_trans.csv"
-    )
+    train = pd.read_csv(TRAIN_PATH)
+    test = pd.read_csv(TEST_PATH)
 
-    train = pd.read_csv(train_path)
-    test = pd.read_csv(test_path)
+    target = "time_taken"
 
-    X_train = train.drop(columns=["time_taken"])
-    y_train = train["time_taken"]
+    if target not in train.columns or target not in test.columns:
+        raise ValueError(
+            f"Target column '{target}' must exist in both datasets."
+        )
 
-    X_test = test.drop(columns=["time_taken"])
-    y_test = test["time_taken"]
+    X_train = train.drop(columns=[target])
+    y_train = train[target]
+
+    X_test = test.drop(columns=[target])
+    y_test = test[target]
+
+    # Ensure training and test features have the same columns
+    if list(X_train.columns) != list(X_test.columns):
+        raise ValueError(
+            "Train and test feature columns/order do not match."
+        )
+
+    print("Training data shape:", X_train.shape)
+    print("Testing data shape:", X_test.shape)
 
     return X_train, y_train, X_test, y_test
 
 
-def create_model():
+def load_preprocessor():
+    with open(PREPROCESSOR_PATH, "rb") as file:
+        preprocessor = pickle.load(file)
+
+    print("Preprocessor loaded successfully.")
+    return preprocessor
+
+
+def create_pipeline(preprocessor):
     model = LGBMRegressor(
         n_estimators=197,
         learning_rate=0.03545159182046778,
@@ -57,18 +78,25 @@ def create_model():
         reg_lambda=0.2387434026492335,
         random_state=42,
         verbosity=-1,
-        n_jobs=-1
+        n_jobs=-1,
     )
 
-    return model
+    pipeline = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("model", model),
+        ]
+    )
+
+    return pipeline
 
 
-def evaluate_model(model, X_test, y_test):
-    y_pred = model.predict(X_test)
+def evaluate_model(pipeline, X_test, y_test):
+    predictions = pipeline.predict(X_test)
 
-    mae = mean_absolute_error(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, predictions)
+    rmse = np.sqrt(mean_squared_error(y_test, predictions))
+    r2 = r2_score(y_test, predictions)
 
     print("\nModel Evaluation Results")
     print("-" * 35)
@@ -76,75 +104,74 @@ def evaluate_model(model, X_test, y_test):
     print(f"RMSE : {rmse:.4f}")
     print(f"R2   : {r2:.4f}")
 
-    return y_pred, mae, rmse, r2
+    return mae, rmse, r2
 
 
-def save_model(model):
-    model_path = os.path.join("model.pkl")
+def save_model(pipeline):
+    with open(MODEL_PATH, "wb") as file:
+        pickle.dump(pipeline, file)
 
-    with open(model_path, "wb") as file:
-        pickle.dump(model, file)
-
-    print(
-        "\nModel saved successfully:",
-        os.path.abspath(model_path)
-    )
-
-    return model_path
+    print("\nComplete pipeline saved at:", MODEL_PATH)
+    return MODEL_PATH
 
 
 def main():
-    # Load training and testing data
+    # Load raw data
     X_train, y_train, X_test, y_test = load_data()
 
-    # Create model
-    model = create_model()
+    # Load the saved preprocessing transformer
+    preprocessor = load_preprocessor()
 
-    # Set MLflow experiment
-    mlflow.set_experiment(
-        "Swiggy_Best_LightGBM_Model"
+    # Build preprocessing + LightGBM pipeline
+    pipeline = create_pipeline(preprocessor)
+
+    # Fit preprocessing and model on training data
+    print("\nTraining pipeline...")
+    pipeline.fit(X_train, y_train)
+
+    # Evaluate on test data
+    mae, rmse, r2 = evaluate_model(
+        pipeline,
+        X_test,
+        y_test,
     )
 
-    # Parent MLflow run
-    with mlflow.start_run(
-        run_name="Best_LightGBM_Final_Model"
-    ):
-        # Log hyperparameters
-        mlflow.log_params(model.get_params())
+    # Save the complete pipeline for API inference
+    model_path = save_model(pipeline)
 
-        # Train model
-        model.fit(X_train, y_train)
-
-        # Predict and evaluate
-        y_pred, mae, rmse, r2 = evaluate_model(
-            model,
-            X_test,
-            y_test
+    # Optional: log experiment to DagsHub / MLflow
+    try:
+        dagshub.init(
+            repo_owner="Pratik1017",
+            repo_name="swiggy_delivery_time_prediction",
+            mlflow=True,
         )
 
-        # Log test metrics
-        mlflow.log_metric("test_mae", mae)
-        mlflow.log_metric("test_rmse", rmse)
-        mlflow.log_metric("test_r2", r2)
+        mlflow.set_experiment("Swiggy_Final_Pipeline")
 
-        # Save model in repository root
-        model_path = save_model(model)
+        with mlflow.start_run(
+            run_name="LightGBM_With_Preprocessor"
+        ):
+            mlflow.log_params(
+                pipeline.named_steps["model"].get_params()
+            )
+            mlflow.log_metric("test_mae", mae)
+            mlflow.log_metric("test_rmse", rmse)
+            mlflow.log_metric("test_r2", r2)
+            mlflow.log_artifact(str(model_path))
 
-        # Log pickle file as MLflow artifact
-        mlflow.log_artifact(model_path)
+            # Cloudpickle avoids the default skops serialization path
+            mlflow.sklearn.log_model(
+                sk_model=pipeline,
+                name="swiggy_delivery_pipeline",
+                serialization_format="cloudpickle",
+            )
 
-        # Log model to MLflow
-        mlflow.sklearn.log_model(
-        sk_model=model,
-        name="best_lightgbm_model",
-        serialization_format="cloudpickle"
-    )
+        print("MLflow logging completed.")
 
-        print("\nMLflow tracking completed!")
-        print(
-            "Run ID:",
-            mlflow.active_run().info.run_id
-        )
+    except Exception as error:
+        print("MLflow logging failed:", error)
+        print("Local model is still saved at:", model_path)
 
 
 if __name__ == "__main__":

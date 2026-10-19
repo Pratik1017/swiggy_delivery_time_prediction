@@ -96,10 +96,10 @@ stages:
       size: 4284471
     - path: src/models/final_model.py
       hash: md5
-      md5: 3fa490c69ac59aba9ed9f94c716dbf15
-      size: 3456
+      md5: 9e8c84394fa5d3924b477f23a44308a7
+      size: 4711
     outs:
     - path: model.pkl
       hash: md5
-      md5: c5f8cf3433342b20df9eb74d27595949
-      size: 1267627
+      md5: 737d040621850acfd13999f07eeb30b0
+      size: 1282537
