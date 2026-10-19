@@ -40,3 +40,31 @@ stages:
       hash: md5
       md5: 5518157e26614485d97db466245c670e
       size: 3440848
+  feature_engineering:
+    cmd: python src/features/feature_engineering.py
+    deps:
+    - path: data/interim/test.csv
+      hash: md5
+      md5: c43833aaf68d0ed743287b58137f0e08
+      size: 1147175
+    - path: data/interim/train.csv
+      hash: md5
+      md5: 5518157e26614485d97db466245c670e
+      size: 3440848
+    - path: src/features/feature_engineering.py
+      hash: md5
+      md5: c73d8c052508fc642c8dcb5c0b892a55
+      size: 5175
+    outs:
+    - path: data/processed/test_trans.csv
+      hash: md5
+      md5: 8ee84296f52998983eea91bc544531e8
+      size: 1433127
+    - path: data/processed/train_trans.csv
+      hash: md5
+      md5: 8c099a8cf14696848da8573f910f6ec4
+      size: 4284471
+    - path: models/preprocessor.pkl
+      hash: md5
+      md5: cd90de73604d4a21907febb289ce1de0
+      size: 5182

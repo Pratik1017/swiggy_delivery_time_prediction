@@ -13,13 +13,9 @@ from sklearn import set_config
 
 set_config(transform_output="pandas")
 
-# columns
-num_cols = ["age", "ratings", "pickup_time_minutes", "distance"]
-
-nominal_cat_cols = ["weather","type_of_order","type_of_vehicle","festival","city_type","is_weekend","order_time_of_day"]
-
-ordinal_cat_cols = ["traffic", "distance_type"]
-
+numeric_cols = ["rider_age", "rider_ratings", "pickup_time_minutes", "distance_km"]
+nominal_cols = ["weather", "type_of_order", "type_of_vehicle", "festival", "city_type", "is_weekend", "order_time_of_day"]
+ordinal_cols = ["traffic", "distance_type"]
 target_col = "time_taken"
 
 # ordinal categories
@@ -55,7 +51,7 @@ def drop_missing_values(data: pd.DataFrame) -> pd.DataFrame | None:
 def create_preprocessor() -> ColumnTransformer:
     preprocessor = ColumnTransformer(
         transformers=[
-            ("scale", MinMaxScaler(), num_cols),
+            ("scale", MinMaxScaler(), numeric_cols),
             (
                 "nominal_encode",
                 OneHotEncoder(
@@ -63,7 +59,7 @@ def create_preprocessor() -> ColumnTransformer:
                     handle_unknown="ignore",
                     sparse_output=False
                 ),
-                nominal_cat_cols
+                nominal_cols
             ),
             (
                 "ordinal_encode",
@@ -75,7 +71,7 @@ def create_preprocessor() -> ColumnTransformer:
                     handle_unknown="use_encoded_value",
                     unknown_value=-1
                 ),
-                ordinal_cat_cols
+                ordinal_cols
             )
         ],
         remainder="passthrough",
@@ -133,9 +129,7 @@ if __name__ == "__main__":
     test_trans_path = os.path.join(
         "data", "processed", "test_trans.csv"
     )
-    transformer_path = os.path.join(
-        "models", "preprocessor.joblib"
-    )
+    transformer_path = os.path.join("models", "preprocessor.pkl")
 
     # load train and test data
     train_df = load_data(train_data_path)
