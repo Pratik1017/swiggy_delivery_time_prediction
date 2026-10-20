@@ -14,7 +14,7 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
-    # Push images only after a push to main, not on pull request
+    # Push images only after a push to main, not pull request
     if: github.event_name != 'pull_request'
 
     steps:
